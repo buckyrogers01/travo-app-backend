@@ -9,7 +9,9 @@ import java.security.Key;
 import java.util.Date;
 
 @Component
-public class JwtUtil {
+public class
+
+JwtUtil {
 
     private static final long EXPIRATION_TIME = 24 * 60 * 60 * 1000; // 1 day
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);

@@ -39,26 +39,15 @@ public class AuthService {
 
         return new LoginResponseDTO(token, user);
     }
-    public RegisterResponseDTO register(RegisterRequestDTO request) {
+    public UserEntity createUserIfNotExists(String phone) {
 
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered");
-        }
-
-        Role role = Role.USER;
-        if (request.getRole() != null) {
-            role = Role.valueOf(request.getRole().toUpperCase());
-        }
-
-        UserEntity user = UserEntity.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(role)
-                .build();
-
-        userRepository.save(user);
-
-        return new RegisterResponseDTO(user);
+        return userRepository.findByPhone(phone)
+                .orElseGet(() -> {
+                    UserEntity user = new UserEntity();
+                    user.setPhone(phone);
+                    user.setPhoneVerified(true);
+                    user.setRole(Role.GUIDE); // or USER → GUIDE later
+                    return userRepository.save(user);
+                });
     }
 }

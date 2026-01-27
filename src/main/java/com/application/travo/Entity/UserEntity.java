@@ -1,4 +1,5 @@
 package com.application.travo.Entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,16 +16,22 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
+    private String phone;
+
+    @Column(nullable = true)
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Role role;
+
+    @Column(nullable = true)
+    private Boolean phoneVerified = false;
 }

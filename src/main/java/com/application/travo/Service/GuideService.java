@@ -1,43 +1,50 @@
 package com.application.travo.Service;
 
 import com.application.travo.Entity.GuideEntity;
-import com.application.travo.Entity.GuideStatus;
-import com.application.travo.Entity.GuideVerificationEntity;
-import com.application.travo.Repo.GuideRepository;
+import com.application.travo.Entity.UserEntity;
 import com.application.travo.dtos.GuideProfileDTO;
-import com.application.travo.dtos.VerificationDTO;
+import com.application.travo.Repo.GuideRepository;
+import com.application.travo.Repo.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
+@RequiredArgsConstructor
 public class GuideService {
 
+    private final GuideRepository guideRepository;
+    private final UserRepository userRepository;
     @Autowired
-    private GuideRepository guideRepo;
+    private ObjectMapper objectMapper;
 
-    public void registerGuide(Long userId) {
 
-        if (guideRepo.existsByUserId(userId)) {
-            throw new RuntimeException("User already a guide");
+    public GuideEntity createGuideProfile(Long userId, GuideProfileDTO dto) {
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (guideRepository.existsByUserId(userId)) {
+            throw new RuntimeException("Guide profile already exists");
         }
+        user.setName(dto.getName());
+        user.setEmail(dto.getEmail());
+        userRepository.save(user);
 
-        GuideEntity guide = new GuideEntity();
-        guide.setUserId(userId);
-        guide.setStatus(GuideStatus.PENDING);
+        String languagesJson =
+                objectMapper.writeValueAsString(dto.getSelectedLanguages());
+        String expertiseTags =  objectMapper.writeValueAsString(dto.getExpertise());
 
-        guideRepo.save(guide);
+        GuideEntity guide = GuideEntity.builder()
+                .bio(dto.getBio())
+                .experienceYears(dto.getExperienceYears())
+                .baseLocation(dto.getBaseLocation())
+                .expertise_tags(expertiseTags)
+                .languages(languagesJson)
+                .user(user)
+                .build();
+
+        return guideRepository.save(guide);
     }
-
-    public void updateProfile(Long userId, GuideProfileDTO dto) {
-
-        GuideEntity guide = guideRepo.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Guide not found"));
-
-        guide.setBio(dto.getBio());
-        guide.setExperienceYears(dto.getExperienceYears());
-        guide.setBaseLocation(dto.getBaseLocation());
-
-        guideRepo.save(guide);
-    }
-
 }

@@ -1,33 +1,43 @@
 package com.application.travo.Entity;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.List;
+
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
+@Builder
 @Table(name = "guides")
 public class GuideEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long guideId;
+    private Long id;
 
-    @Column(nullable = false, unique = true)
-    private Long userId;
-
+    @Column(length = 500)
     private String bio;
+
+    @Column(nullable = false)
     private Integer experienceYears;
 
-    @Enumerated(EnumType.STRING)
-    private GuideStatus status; // PENDING, VERIFIED, REJECTED
-
+    @Column(nullable = false)
     private String baseLocation;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private String languages;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private String expertise_tags;
+
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private UserEntity user;
 }
