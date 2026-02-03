@@ -30,13 +30,22 @@ public class S3FileService {
                 throw new RuntimeException("File is empty");
             }
 
+            if (file.getSize() > 5 * 1024 * 1024) {
+                throw new RuntimeException("File size exceeds 5MB");
+            }
+
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new RuntimeException("Only image files allowed");
+            }
+
             String fileName = FileUtil.generateFileName(file.getOriginalFilename());
             String key = folder + "/" + fileName;
 
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .contentType(file.getContentType())
+                    .contentType(contentType)
                     .build();
 
             s3Client.putObject(
@@ -47,28 +56,17 @@ public class S3FileService {
                     )
             );
 
-            return "https://" + bucket + ".s3.ap-south-1.amazonaws.com/" + key;
+            return key; // ✅ return key, not URL
 
         } catch (S3Exception e) {
-            // AWS side error
-            System.err.println("🔥 S3 ERROR");
-            System.err.println("Status Code: " + e.statusCode());
-            System.err.println("AWS Message: " + e.awsErrorDetails().errorMessage());
+            System.err.println("🔥 S3 ERROR: " + e.awsErrorDetails().errorMessage());
             throw new RuntimeException("S3 upload failed");
 
         } catch (IOException e) {
-            // File read error
-            System.err.println("🔥 FILE ERROR");
-            e.printStackTrace();
             throw new RuntimeException("File read failed");
 
         } catch (Exception e) {
-            // Anything else
-            System.err.println("🔥 UNKNOWN ERROR");
-            e.printStackTrace();
-            throw new RuntimeException("Upload failed");
+            throw new RuntimeException(e.getMessage());
         }
     }
-
 }
-

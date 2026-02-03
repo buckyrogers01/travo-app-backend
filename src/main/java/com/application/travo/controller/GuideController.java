@@ -6,12 +6,17 @@ import com.application.travo.Repo.UserRepository;
 import com.application.travo.Service.AuthService;
 import com.application.travo.Service.GuideService;
 import com.application.travo.Service.OtpService;
+import com.application.travo.Service.S3FileService;
 import com.application.travo.Utility.JwtUtil;
 import com.application.travo.dtos.GuideProfileDTO;
 import com.application.travo.dtos.SendOtpRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/guides")
@@ -24,6 +29,7 @@ public class GuideController {
     private final OtpService otpService;
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final S3FileService s3Service;
 
     @PostMapping("/{userId}")
     public ResponseEntity<?> createGuide(
@@ -75,6 +81,38 @@ public class GuideController {
                     .badRequest()
                     .body("Invalid OTP. Please try again.");
         }
+    }
+
+    @PostMapping("/documents/upload")
+    public ResponseEntity<?> uploadDocuments(
+            @RequestParam("guideId") Long guideId,
+            @RequestParam("idType") String idType,
+            @RequestParam("emergencyPhone") String emergencyPhone,
+            @RequestPart("idFront") MultipartFile idFront,
+            @RequestPart("idBack") MultipartFile idBack,
+            @RequestPart(value = "certificate", required = false) MultipartFile certificate
+    ) throws IOException {
+
+        String basePath = "guides/" + guideId;
+
+        String idFrontKey = s3Service.upload(idFront, basePath);
+        String idBackKey = s3Service.upload(idBack, basePath);
+
+        String certKey = null;
+        if (certificate != null) {
+            certKey = s3Service.upload(certificate, basePath);
+        }
+
+        guideService.saveVerificationDocs(
+                guideId,
+                idType,
+                emergencyPhone,
+                idFrontKey,
+                idBackKey,
+                certKey
+        );
+
+        return ResponseEntity.ok("Documents uploaded successfully");
     }
 
 }
