@@ -10,7 +10,7 @@ pipeline {
         stage('Clone Code') {
             steps {
                 git branch: 'main',
-                url: 'https://github.com/<username>/<repo>.git'
+                url: 'https://github.com/buckyrogers01/travo-app-backend.git'
             }
         }
 
