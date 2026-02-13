@@ -23,9 +23,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                pkill -f travo.jar || true
+                sudo systemctl stop travo || true
                 cp target/*.jar /home/ubuntu/travo.jar
-                nohup java -jar /home/ubuntu/travo.jar > log.txt 2>&1 &
+                sudo systemctl start travo
                 '''
             }
         }
