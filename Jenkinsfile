@@ -23,9 +23,13 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                sudo systemctl stop travo || true
+                pkill -f travo.jar || true
+
                 cp target/*.jar /home/ubuntu/travo.jar
-                sudo systemctl start travo
+
+                nohup java -jar /home/ubuntu/travo.jar \
+                --spring.config.location=/home/ubuntu/application.properties \
+                > /home/ubuntu/log.txt 2>&1 &
                 '''
             }
         }
