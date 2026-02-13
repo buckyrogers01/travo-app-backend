@@ -1,4 +1,4 @@
-package com.application.travo.controller;
+package com.application.travo.controller.v1;
 import com.application.travo.Entity.GuideEntity;
 import com.application.travo.Entity.UserEntity;
 import com.application.travo.Repo.GuideRepository;
@@ -12,7 +12,6 @@ import com.application.travo.dtos.GuideProfileDTO;
 import com.application.travo.dtos.SendOtpRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
