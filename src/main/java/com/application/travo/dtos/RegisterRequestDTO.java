@@ -9,4 +9,5 @@ public class RegisterRequestDTO {
     private String email;
     private String password;
     private String role; // USER / GUIDE / ADMIN (optional)
+    private String phone; // USER / GUIDE / ADMIN (optional)
 }

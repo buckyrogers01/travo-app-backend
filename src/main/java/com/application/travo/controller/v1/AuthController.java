@@ -27,12 +27,11 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // REGISTER
-//    @PostMapping("/register")
-//    public ResponseEntity<?> register(
-//            @RequestBody RegisterRequestDTO request) {
-//
-//        authService.register(request);
-//        return ResponseEntity.ok("User registered successfully");
-//    }
+    @PostMapping("/register")
+    public ResponseEntity<?> register(
+            @RequestBody RegisterRequestDTO request) {
+
+        authService.register(request);
+        return ResponseEntity.ok("User registered successfully");
+    }
 }

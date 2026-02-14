@@ -39,6 +39,26 @@ public class AuthService {
 
         return new LoginResponseDTO(token, user);
     }
+    public RegisterResponseDTO register(RegisterRequestDTO request) {
+
+        // check if user already exists
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("User already exists with this email");
+        }
+
+        // create new user
+        UserEntity user = new UserEntity();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.ADMIN); // or request.getRole() if coming from UI
+
+        UserEntity savedUser = userRepository.save(user);
+
+        return new RegisterResponseDTO(savedUser);
+    }
+
     public UserEntity createUserIfNotExists(String phone) {
 
         return userRepository.findByPhone(phone)
