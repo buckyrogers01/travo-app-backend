@@ -26,7 +26,9 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:8081",   // Expo web
                 "http://localhost:19006",  // Expo older
-                "http://localhost:3000"    // React web
+                "http://localhost:3000",
+                "http://98.81.214.169",
+                "http://localhost:5173" // React web
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
