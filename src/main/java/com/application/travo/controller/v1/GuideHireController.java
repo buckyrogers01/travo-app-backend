@@ -3,15 +3,18 @@ import com.application.travo.Entity.GuideEntity;
 import com.application.travo.Entity.UserEntity;
 import com.application.travo.Repo.GuideRepository;
 import com.application.travo.Repo.UserRepository;
-import com.application.travo.Service.AuthService;
-import com.application.travo.Service.GuideService;
-import com.application.travo.Service.OtpService;
-import com.application.travo.Service.S3FileService;
+import com.application.travo.Service.*;
 import com.application.travo.Utility.JwtUtil;
+import com.application.travo.Utility.PasswordUtil;
+import com.application.travo.dtos.GuideFilterRequest;
 import com.application.travo.dtos.GuideProfileDTO;
 import com.application.travo.dtos.SendOtpRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +23,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/guides")
 @RequiredArgsConstructor
-public class GuideController {
+public class GuideHireController {
 
     private final GuideRepository guideRepo;
     private final UserRepository userRepo;
@@ -29,6 +32,10 @@ public class GuideController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     private final S3FileService s3Service;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private MailService mailService;
 
     @PostMapping("/{userId}")
     public ResponseEntity<?> createGuide(
@@ -83,6 +90,7 @@ public class GuideController {
     }
 
     @PostMapping("/documents/upload")
+    @Transactional
     public ResponseEntity<?> uploadDocuments(
             @RequestParam("guideId") Long guideId,
             @RequestParam("idType") String idType,
@@ -96,11 +104,7 @@ public class GuideController {
 
         String idFrontKey = s3Service.upload(idFront, basePath);
         String idBackKey = s3Service.upload(idBack, basePath);
-
-        String certKey = null;
-        if (certificate != null) {
-            certKey = s3Service.upload(certificate, basePath);
-        }
+        String certKey = certificate != null ? s3Service.upload(certificate, basePath) : null;
 
         guideService.saveVerificationDocs(
                 guideId,
@@ -111,7 +115,26 @@ public class GuideController {
                 certKey
         );
 
-        return ResponseEntity.ok("Documents uploaded successfully");
+        // generate temp password
+        String tempPassword = PasswordUtil.generateTempPassword(8);
+        guideService.updatePassword(guideId, tempPassword);
+
+        // send email
+        UserEntity guide = userRepo.findById(guideId)
+                .orElseThrow(() -> new RuntimeException("Guide not found"));
+
+        try {
+            mailService.sendTempPasswordMail(
+                    guide.getEmail(),
+                    guide.getName(),
+                    tempPassword
+            );
+        } catch (Exception e) {
+            // log only
+            System.err.println("Email failed: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok("Documents uploaded & email sent");
     }
 
 }

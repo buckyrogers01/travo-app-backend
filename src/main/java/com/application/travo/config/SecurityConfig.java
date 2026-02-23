@@ -1,5 +1,6 @@
 package com.application.travo.config;
 
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,10 +16,15 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+    private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -45,13 +51,14 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {}) // 🔥 THIS ENABLES CORS
+                .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/guides/**").permitAll()
-                        .requestMatchers("/api/files/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers("/api/v1/admin/**").authenticated() // 🔥 now secured
+                        .anyRequest().permitAll()
+                )
+                .addFilterBefore(jwtAuthFilter,
+                        org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

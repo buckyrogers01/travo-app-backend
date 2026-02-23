@@ -4,12 +4,20 @@ import com.application.travo.Entity.GuideEntity;
 import com.application.travo.Entity.GuideVerificationEntity;
 import com.application.travo.Entity.UserEntity;
 import com.application.travo.Repo.GuideVerificationRepository;
+import com.application.travo.dtos.GuideFilterRequest;
 import com.application.travo.dtos.GuideProfileDTO;
 import com.application.travo.Repo.GuideRepository;
 import com.application.travo.Repo.UserRepository;
+import com.application.travo.specifications.GuideSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
@@ -25,7 +33,7 @@ public class GuideService {
 
     @Autowired
     private ObjectMapper objectMapper;
-
+    private final PasswordEncoder passwordEncoder;
 
     public GuideEntity createGuideProfile(Long userId, GuideProfileDTO dto) {
 
@@ -80,5 +88,27 @@ public class GuideService {
         verification.setUpdatedAt(LocalDateTime.now());
 
         verificationRepo.save(verification);
+    }
+
+    public void updatePassword(Long guideId, String password) {
+        GuideEntity guide = guideRepository.findById(guideId)
+                .orElseThrow(() -> new RuntimeException("Guide not found"));
+        UserEntity user = userRepository.findById(guide.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+    }
+
+    public Page<GuideEntity> getAllGuides(
+            GuideFilterRequest filter,
+            int page,
+            int size
+    ) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+
+        Specification<GuideEntity> spec = GuideSpecification.getGuides(filter);
+
+        return guideRepository.findAll(spec, pageable);
     }
 }
