@@ -20,6 +20,9 @@ public class S3Config {
     @Value("${aws.secret-key}")
     private String secretKey;
 
+    @Value("${aws.s3.base-url}")
+    private String baseUrl;
+
     @Bean
     public S3Client s3Client() {
         AwsBasicCredentials awsCreds =
@@ -31,5 +34,10 @@ public class S3Config {
                         StaticCredentialsProvider.create(awsCreds)
                 )
                 .build();
+    }
+
+    public String getUrl(String key){
+        if(key == null) return null;
+        return baseUrl + "/" + key;
     }
 }

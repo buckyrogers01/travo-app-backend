@@ -1,9 +1,11 @@
 package com.application.travo.Service;
 
 import com.application.travo.Entity.GuideEntity;
+import com.application.travo.Entity.GuideStatus;
 import com.application.travo.Entity.GuideVerificationEntity;
 import com.application.travo.Entity.UserEntity;
 import com.application.travo.Repo.GuideVerificationRepository;
+import com.application.travo.config.S3Config;
 import com.application.travo.dtos.GuideFilterRequest;
 import com.application.travo.dtos.GuideProfileDTO;
 import com.application.travo.Repo.GuideRepository;
@@ -22,6 +24,8 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +34,8 @@ public class GuideService {
     private final GuideRepository guideRepository;
     private final UserRepository userRepository;
     private final GuideVerificationRepository verificationRepo;
+    private final S3Config s3UrlService;
+    private MailService mailService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -110,5 +116,60 @@ public class GuideService {
         Specification<GuideEntity> spec = GuideSpecification.getGuides(filter);
 
         return guideRepository.findAll(spec, pageable);
+    }
+    public Map<String, Object> getGuideById(Long guideId) {
+
+        GuideEntity guide = guideRepository.findById(guideId)
+                .orElseThrow(() -> new RuntimeException("Guide not found"));
+
+        GuideVerificationEntity verification =
+                verificationRepo.findByGuideId(guideId).orElse(null);
+
+        if(verification != null){
+
+            verification.setIdFrontKey(
+                    s3UrlService.getUrl(verification.getIdFrontKey())
+            );
+
+            verification.setIdBackKey(
+                    s3UrlService.getUrl(verification.getIdBackKey())
+            );
+
+            verification.setCertificateKey(
+                    s3UrlService.getUrl(verification.getCertificateKey())
+            );
+        }
+
+        Map<String,Object> res = new HashMap<>();
+        res.put("guide",guide);
+        res.put("verification",verification);
+
+        return res;
+    }
+    public void updateGuideStatus(Long guideId, GuideStatus status){
+
+        GuideEntity guide = guideRepository.findById(guideId)
+                .orElseThrow(() -> new RuntimeException("Guide not found"));
+
+        UserEntity user = userRepository.findById(guide.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        guide.setStatus(status);
+
+        guideRepository.save(guide);
+
+        if(status == GuideStatus.VERIFIED){
+            mailService.sendGuideApprovedMail(
+                    user.getEmail(),
+                    user.getName()
+            );
+        }
+
+        if(status == GuideStatus.REJECTED){
+            mailService.sendGuideRejectedMail(
+                    user.getEmail(),
+                    user.getName()
+            );
+        }
     }
 }

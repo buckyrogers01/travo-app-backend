@@ -37,6 +37,12 @@ public class GuideEntity {
     @Column(columnDefinition = "jsonb")
     private String expertise_tags;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private GuideStatus status = GuideStatus.PENDING;
+
+
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;

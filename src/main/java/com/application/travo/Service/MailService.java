@@ -26,4 +26,38 @@ public class MailService {
 
         mailSender.send(message);
     }
+
+    public void sendGuideApprovedMail(String to, String name){
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Your Guide Profile is Approved");
+
+        message.setText(
+                "Hi " + name + ",\n\n" +
+                        "Congratulations! Your guide profile has been approved.\n\n" +
+                        "You can now start receiving bookings on Travo.\n\n" +
+                        "Login to your dashboard to manage your profile and bookings.\n\n" +
+                        "Regards,\nTravo Team"
+        );
+
+        mailSender.send(message);
+    }
+
+    public void sendGuideRejectedMail(String to, String name){
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("Guide Profile Verification Update");
+
+        message.setText(
+                "Hi " + name + ",\n\n" +
+                        "We regret to inform you that your guide profile verification was not approved.\n\n" +
+                        "Please review your submitted documents and apply again.\n\n" +
+                        "If you believe this is a mistake, feel free to contact support.\n\n" +
+                        "Regards,\nTravo Team"
+        );
+
+        mailSender.send(message);
+    }
 }
