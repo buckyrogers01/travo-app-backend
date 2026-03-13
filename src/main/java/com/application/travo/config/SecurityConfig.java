@@ -34,6 +34,7 @@ public class SecurityConfig {
                 "http://localhost:19006",  // Expo older
                 "http://localhost:3000",
                 "http://98.81.214.169",
+                "https://admin.traavo.in",
                 "http://localhost:5173" // React web
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
